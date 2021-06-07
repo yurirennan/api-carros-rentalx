@@ -31,6 +31,11 @@ export async function ensureAuthenticated(
 
     if (!user) throw new AppError("User Not Found!", 401);
 
+    // Da erro por causa da tipagem, é necessário sobreescrever a tipagem
+    request.user = {
+      id: user_id,
+    };
+
     next();
   } catch {
     throw new AppError("Invalid Token", 401);
