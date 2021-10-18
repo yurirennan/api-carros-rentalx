@@ -26,7 +26,6 @@ class CreateRentalUseCase {
     car_id,
     expected_return_date,
   }: IRequest): Promise<Rental> {
-    console.log("DDDDDDDDDD");
     const carUnavailable = await this.rentalsRepository.findOpenRentalByCar(
       car_id
     );
@@ -48,8 +47,6 @@ class CreateRentalUseCase {
       dateNow,
       expected_return_date
     );
-
-    console.log(dateNow);
 
     if (rentalHours < 24) {
       throw new AppError("Rent must be at least 24 hours");
