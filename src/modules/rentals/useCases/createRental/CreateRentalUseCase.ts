@@ -1,5 +1,6 @@
 import { inject, injectable } from "tsyringe";
 
+import { ICarsRepository } from "@modules/cars/repositories/ICarsRepository";
 import Rental from "@modules/rentals/infra/typeorm/entities/Rental";
 import { IRentalsRepository } from "@modules/rentals/repositories/IRentalsRepository";
 import { AppError } from "@shared/errors/AppError";
@@ -18,7 +19,10 @@ class CreateRentalUseCase {
     private rentalsRepository: IRentalsRepository,
 
     @inject("DateProvider")
-    private dateProvider: IDateProvider
+    private dateProvider: IDateProvider,
+
+    @inject("CarsRepository")
+    private carsRepository: ICarsRepository
   ) {}
 
   async execute({
@@ -51,6 +55,8 @@ class CreateRentalUseCase {
     if (rentalHours < 24) {
       throw new AppError("Rent must be at least 24 hours");
     }
+
+    this.carsRepository.updateAvailableStatus(car_id, false);
 
     const rental = await this.rentalsRepository.create({
       user_id,

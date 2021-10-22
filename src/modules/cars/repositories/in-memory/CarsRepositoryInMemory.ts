@@ -33,6 +33,15 @@ class CarsRepositoryInMemory implements ICarsRepository {
     return car;
   }
 
+  async updateAvailableStatus(
+    car_id: string,
+    availableStatus: boolean
+  ): Promise<void> {
+    const car = this.cars.find((car) => car.id === car_id);
+
+    car.available = availableStatus;
+  }
+
   async findById(car_id: string): Promise<Car> {
     const car = this.cars.find((car) => {
       return car.id === car_id;
