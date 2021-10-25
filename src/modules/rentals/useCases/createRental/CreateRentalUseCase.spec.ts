@@ -13,7 +13,7 @@ let carsRepositoryInMemory: CarsRepositoryInMemory;
 let dateProvider: DateProvider;
 
 describe("Create Rental", () => {
-  const dayAdd24Hours = dayjs().add(1, "day").toDate();
+  const dayAdd48Hours = dayjs().add(1, "day").toDate();
 
   beforeEach(() => {
     dateProvider = new DateProvider();
@@ -27,10 +27,20 @@ describe("Create Rental", () => {
   });
 
   it("Should be able to create a new Rental", async () => {
+    const car = await carsRepositoryInMemory.create({
+      name: "Name Car",
+      description: "Description Car",
+      daily_rate: 100,
+      license_plate: "ABCD-1234",
+      fine_amount: 50,
+      brand: "Brand",
+      category_id: "Uno",
+    });
+
     const rental = await createRentalUseCase.execute({
       user_id: "12345",
-      car_id: "121212",
-      expected_return_date: dayAdd24Hours,
+      car_id: car.id,
+      expected_return_date: dayAdd48Hours,
     });
 
     expect(rental).toHaveProperty("id");
@@ -38,44 +48,84 @@ describe("Create Rental", () => {
   });
 
   it("Should not be able to create a new Rental, if there another open rental to same user", async () => {
-    expect(async () => {
-      await createRentalUseCase.execute({
-        user_id: "12345",
-        car_id: "121212",
-        expected_return_date: dayAdd24Hours,
-      });
+    const car = await carsRepositoryInMemory.create({
+      name: "Name Car",
+      description: "Description Car",
+      daily_rate: 100,
+      license_plate: "ABCD-1234",
+      fine_amount: 50,
+      brand: "Brand",
+      category_id: "Uno",
+    });
 
-      await createRentalUseCase.execute({
+    const car2 = await carsRepositoryInMemory.create({
+      name: "Name Car",
+      description: "Description Car",
+      daily_rate: 100,
+      license_plate: "ABCD-1234",
+      fine_amount: 50,
+      brand: "Brand",
+      category_id: "Uno",
+    });
+
+    await createRentalUseCase.execute({
+      user_id: "12345",
+      car_id: car.id,
+      expected_return_date: dayAdd48Hours,
+    });
+
+    await expect(
+      createRentalUseCase.execute({
         user_id: "12345",
-        car_id: "12121212",
-        expected_return_date: dayAdd24Hours,
-      });
-    }).rejects.toBeInstanceOf(AppError);
+        car_id: car2.id,
+        expected_return_date: dayAdd48Hours,
+      })
+    ).rejects.toEqual(new AppError("User with open car rental"));
   });
 
   it("Should not be able to create a new Rental, if there another open rental to same car", async () => {
-    expect(async () => {
-      await createRentalUseCase.execute({
-        user_id: "12345",
-        car_id: "121212",
-        expected_return_date: dayAdd24Hours,
-      });
+    const car = await carsRepositoryInMemory.create({
+      name: "Name Car",
+      description: "Description Car",
+      daily_rate: 100,
+      license_plate: "ABCD-1234",
+      fine_amount: 50,
+      brand: "Brand",
+      category_id: "Uno",
+    });
 
-      await createRentalUseCase.execute({
+    await createRentalUseCase.execute({
+      user_id: "12345",
+      car_id: car.id,
+      expected_return_date: dayAdd48Hours,
+    });
+
+    await expect(
+      createRentalUseCase.execute({
         user_id: "123456",
-        car_id: "121212",
-        expected_return_date: dayAdd24Hours,
-      });
-    }).rejects.toBeInstanceOf(AppError);
+        car_id: car.id,
+        expected_return_date: dayAdd48Hours,
+      })
+    ).rejects.toEqual(new AppError("Car is unavailable"));
   });
 
   it("Should not be able to create a new Rental with invalid return time", async () => {
-    expect(async () => {
-      await createRentalUseCase.execute({
+    const car = await carsRepositoryInMemory.create({
+      name: "Name Car",
+      description: "Description Car",
+      daily_rate: 100,
+      license_plate: "ABCD-1234",
+      fine_amount: 50,
+      brand: "Brand",
+      category_id: "Uno",
+    });
+
+    await expect(
+      createRentalUseCase.execute({
         user_id: "12345",
-        car_id: "121212",
+        car_id: car.id,
         expected_return_date: dateProvider.createDate(),
-      });
-    }).rejects.toBeInstanceOf(AppError);
+      })
+    ).rejects.toEqual(new AppError("Rent must be at least 24 hours"));
   });
 });

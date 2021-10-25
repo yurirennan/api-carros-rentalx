@@ -30,12 +30,18 @@ class CreateRentalUseCase {
     car_id,
     expected_return_date,
   }: IRequest): Promise<Rental> {
-    const carUnavailable = await this.rentalsRepository.findOpenRentalByCar(
+    const carExists = await this.carsRepository.findById(car_id);
+
+    if (!carExists) {
+      throw new AppError("Car does not exists!");
+    }
+
+    const openedRental = await this.rentalsRepository.findOpenRentalByCar(
       car_id
     );
 
-    if (carUnavailable) {
-      throw new AppError("Car is unavailable'");
+    if (openedRental) {
+      throw new AppError("Car is unavailable");
     }
 
     const userWithOpenRental = await this.rentalsRepository.findOpenRentalByUser(
