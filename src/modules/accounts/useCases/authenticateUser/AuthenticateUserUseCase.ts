@@ -2,8 +2,11 @@ import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { inject, injectable } from "tsyringe";
 
+import authConfig from "@config/authConfig";
 import IUsersRepository from "@modules/accounts/repositories/IUsersRepository";
+import IUsersTokensRepository from "@modules/accounts/repositories/IUsersTokens";
 import { AppError } from "@shared/errors/AppError";
+import { IDateProvider } from "@shared/providers/IDateProvider";
 
 interface IRequest {
   email: string;
@@ -16,13 +19,20 @@ interface IResponse {
     email: string;
   };
   token: string;
+  refresh_token: string;
 }
 
 @injectable()
 class AuthenticateUserUseCase {
   constructor(
     @inject("UsersRepository")
-    private usersRepository: IUsersRepository
+    private usersRepository: IUsersRepository,
+
+    @inject("UsersTokensRepository")
+    private usersTokensRepository: IUsersTokensRepository,
+
+    @inject("DateProvider")
+    private dateProvider: IDateProvider
   ) {}
 
   async execute({ email, password }: IRequest): Promise<IResponse> {
@@ -39,9 +49,22 @@ class AuthenticateUserUseCase {
 
     // criar o token
     // parametros informações adicionais, md5 hash
-    const token = sign({}, "1c337b8875d720aecd45a9ce37e436d6", {
+    const token = sign({}, authConfig.secret_token, {
       subject: user.id,
-      expiresIn: "1d",
+      expiresIn: authConfig.expires_in_token,
+    });
+
+    const refresh_token = sign({ email }, authConfig.secret_refresh_token, {
+      subject: user.id,
+      expiresIn: authConfig.expires_in_refresh_token,
+    });
+
+    await this.usersTokensRepository.create({
+      user_id: user.id,
+      refresh_token,
+      expires_date: this.dateProvider.addDays(
+        authConfig.expires_in_refresh_token_days
+      ),
     });
 
     const tokenReturned: IResponse = {
@@ -50,6 +73,7 @@ class AuthenticateUserUseCase {
         name: user.name,
         email,
       },
+      refresh_token,
     };
 
     return tokenReturned;
