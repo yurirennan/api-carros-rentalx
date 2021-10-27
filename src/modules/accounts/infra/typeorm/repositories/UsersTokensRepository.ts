@@ -41,7 +41,7 @@ class UsersTokensRepository implements IUsersTokensRepository {
     token: string
   ): Promise<UserTokens> {
     const userToken = await this.repository.findOne({
-      where: { id: user_id, refresh_token: token },
+      where: { user_id, refresh_token: token },
     });
 
     return userToken;

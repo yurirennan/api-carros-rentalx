@@ -26,7 +26,7 @@ describe("Create Category Controller", () => {
       password: "admin",
     });
 
-    responseToken = response.body.token;
+    responseToken = response.body.refresh_token;
   });
 
   afterAll(async () => {

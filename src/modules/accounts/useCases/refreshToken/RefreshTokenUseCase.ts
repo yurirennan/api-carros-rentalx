@@ -24,7 +24,7 @@ class RefreshTokenUseCase {
   async execute(token: string): Promise<string> {
     const { email, sub } = verify(
       token,
-      authConfig.expires_in_refresh_token
+      authConfig.secret_refresh_token
     ) as IPayload;
 
     const user_id = sub;
@@ -35,7 +35,7 @@ class RefreshTokenUseCase {
     );
 
     if (!userToken) {
-      throw new AppError("Refresh Token Error");
+      throw new AppError("Refresh Token does not exists");
     }
 
     const refresh_token = sign({ email }, authConfig.secret_refresh_token, {
