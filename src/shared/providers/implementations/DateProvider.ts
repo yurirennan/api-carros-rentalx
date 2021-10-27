@@ -30,6 +30,10 @@ class DateProvider implements IDateProvider {
     return days;
   }
 
+  comapreIfBefore(start_date: Date, end_date: Date): boolean {
+    return dayjs(start_date).isBefore(end_date);
+  }
+
   addHours(hours: number): Date {
     return dayjs().add(hours, "hour").toDate();
   }

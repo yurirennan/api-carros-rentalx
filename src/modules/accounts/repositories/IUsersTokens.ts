@@ -8,6 +8,7 @@ interface IUsersTokensRepository {
     user_id,
   }: IUsersTokens): Promise<UserTokens>;
 
+  findByToken(token: string): Promise<UserTokens>;
   findByUserIdAndRefreshToken(
     user_id: string,
     token: string
